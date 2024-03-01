@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jihai.bitfree.dao.MessageNoticeDAO">
+    <sql id="BASE_COLUMN">id, message_id, user_id, type, create_time, update_time, deleted</sql>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO message_notice(`message_id`, `user_id`, `type`)
+        VALUE(#{messageId}, #{userId}, #{type})
+    </insert>
+    <insert id="batchInsert">
+        INSERT INTO message_notice(`message_id`, `user_id`, `type`)
+        VALUES
+        <foreach collection="messageNoticeDOList" separator=","  item="messageNotice">
+            (#{messageNotice.messageId},
+            #{messageNotice.userId},
+            #{messageNotice.type})
+        </foreach>
+    </insert>
+    <select id="queryByMessageIdListAll" resultType="com.jihai.bitfree.entity.MessageNoticeDO">
+        SELECT <include refid="BASE_COLUMN" />
+        FROM message_notice
+        WHERE `type` = #{type}
+        AND message_id IN
+        <foreach collection="notificationIdList" item="notificationId" open="(" separator="," close=")">
+            #{notificationId}
+        </foreach>
+        AND deleted = 0
+    </select>
+    <select id="queryByMessageIdList" resultType="com.jihai.bitfree.entity.MessageNoticeDO">
+        SELECT <include refid="BASE_COLUMN" />
+        FROM message_notice
+        WHERE `type` = #{type}
+        AND user_id = #{userId}
+        AND message_id IN
+        <foreach collection="notificationIdList" item="notificationId" open="(" separator="," close=")">
+            #{notificationId}
+        </foreach>
+        AND deleted = 0
+    </select>
+    <select id="count" resultType="integer">
+        SELECT COUNT(*)
+        FROM message_notice
+        WHERE `type` = #{type}
+        AND user_id = #{userId}
+        AND deleted = 0
+    </select>
+
+</mapper>

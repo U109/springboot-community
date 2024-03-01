@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jihai.bitfree.dao.PostDAO">
+
+    <resultMap id="postResultMap" type="com.jihai.bitfree.entity.PostDO">
+        <result column="id" property="id" />
+        <result column="title" property="title" />
+        <result column="content" property="content" />
+        <result column="creator_id" property="creatorId" />
+        <result column="type" property="type" />
+        <result column="view_count" property="viewCount" />
+        <result column="topic_id" property="topicId" />
+        <result column="last_updater_id" property="lastUpdaterId" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="deleted" property="deleted" />
+    </resultMap>
+
+    <sql id="BASE_COLUMN">id, title, content, creator_id, type, topic_id, view_count, last_updater_id, create_time, update_time, deleted</sql>
+
+    <insert id="insert">
+        INSERT INTO post(`title`, `content`, `type`, `creator_id`, `topic_id`, `last_updater_id`)
+        VALUE(#{title}, #{content}, #{type}, #{creatorId}, #{topicId}, #{lastUpdaterId})
+    </insert>
+    <update id="updateTime">
+        UPDATE post SET update_time = NOW()
+        WHERE id = #{postId} AND deleted = 0
+    </update>
+    <update id="deleted">
+        UPDATE post SET deleted = 1, update_time = NOW()
+        WHERE id = #{postId}
+    </update>
+    <update id="incrementView">
+        UPDATE post SET view_count = view_count + 1
+        WHERE id = #{id}
+    </update>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(*) FROM post WHERE deleted = 0
+        <if test="topicId != null">
+            AND topic_id = #{topicId}
+        </if>
+    </select>
+    <select id="pageQuery" resultMap="postResultMap">
+        SELECT <include refid="BASE_COLUMN"/>
+        FROM post WHERE deleted = 0
+        <if test="topicId != null">
+            AND topic_id = #{topicId}
+        </if>
+        <if test="userId != null">
+            AND creator_id = #{userId}
+        </if>
+        <if test="searchText != null">
+            AND title LIKE #{searchText}
+        </if>
+        ORDER BY update_time DESC LIMIT #{start}, #{size}
+    </select>
+    <select id="queryByIdList" resultMap="postResultMap">
+        SELECT <include refid="BASE_COLUMN"/>
+        FROM post WHERE deleted = 0 AND id IN
+        <foreach collection="topPostIdList" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+    <select id="getById" resultMap="postResultMap">
+        SELECT <include refid="BASE_COLUMN"/>
+        FROM post WHERE id = #{id} AND deleted = 0
+    </select>
+    <select id="getByIdList" resultMap="postResultMap">
+        SELECT <include refid="BASE_COLUMN"/>
+        FROM post
+        WHERE id IN
+        <foreach collection="idList" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND deleted = 0
+    </select>
+    <select id="countByUserId" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM post WHERE creator_id = #{userId} AND deleted = 0
+    </select>
+    <select id="queryRankList" resultType="com.jihai.bitfree.dto.resp.RankPostItemResp">
+        SELECT post.id AS id, post.title AS title, COUNT(reply.id) AS replyCount FROM
+        post RIGHT JOIN
+        reply ON post.id = reply.post_id
+        WHERE reply.create_time > DATE_SUB(CURDATE(), interval 1 day)
+        AND reply.deleted = 0
+        GROUP BY post_id
+        ORDER BY count(reply.id) DESC LIMIT 10
+    </select>
+    <select id="queryVideoList" resultType="com.jihai.bitfree.entity.PostDO">
+        SELECT <include refid="BASE_COLUMN"/>
+        FROM post WHERE type = 1 AND deleted = 0
+        ORDER BY create_time DESC LIMIT #{start}, #{size}
+    </select>
+    <select id="countVideo" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM post WHERE type = 1 AND deleted = 0
+    </select>
+</mapper>

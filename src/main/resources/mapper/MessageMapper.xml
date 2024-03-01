@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jihai.bitfree.dao.MessageDAO">
+    <resultMap id="configResultMap" type="com.jihai.bitfree.entity.MessageDO">
+        <result column="id" property="id" />
+        <result column="content" property="content" />
+        <result column="send_user_id" property="sendUserId" />
+        <result column="deleted" property="deleted" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <sql id="BASE_COLUMN">id, send_user_id, target_message_id, content, create_time, update_time, deleted</sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO message(`send_user_id`, `target_message_id`, `content`)
+        VALUE(#{sendUserId}, #{targetMessageId}, #{content})
+    </insert>
+    <update id="delete">
+        UPDATE message
+        SET deleted = 1
+        WHERE id = #{id}
+    </update>
+    <select id="pageQueryRecentList" resultType="com.jihai.bitfree.entity.MessageDO">
+        SELECT <include refid="BASE_COLUMN"/>
+        FROM message
+        WHERE deleted = 0
+        ORDER BY create_time DESC LIMIT #{start}, #{size}
+    </select>
+    <select id="count" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM message
+        WHERE deleted = 0
+    </select>
+    <select id="getRecentMessageCount" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM message
+        WHERE create_time &gt; DATE_SUB(CURDATE(), interval 1 day)
+        AND deleted = 0
+    </select>
+    <select id="countAfterId" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM message
+        WHERE id > #{id}
+        AND send_user_id != #{userId}
+        AND deleted = 0
+    </select>
+    <select id="getRecentMessageId" resultType="java.lang.Long">
+        SELECT id
+        FROM message
+        ORDER BY id DESC LIMIT 1
+    </select>
+    <select id="getSendUserIdByMessageId" resultType="java.lang.Long">
+        SELECT send_user_id
+        FROM message
+        WHERE id = #{id}
+        AND deleted = 0
+    </select>
+    <select id="queryByTargetMessageIdList" resultType="com.jihai.bitfree.entity.MessageDO">
+        SELECT <include refid="BASE_COLUMN"/>
+        FROM message
+        WHERE id IN
+        <foreach collection="notificationIdList" item="notificationId" open="(" separator="," close=")">
+            #{notificationId}
+        </foreach>
+        AND deleted = 0
+    </select>
+
+</mapper>

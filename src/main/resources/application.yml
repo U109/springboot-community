@@ -1,0 +1,32 @@
+server:
+  port: 8080
+
+
+logging:
+  # Set the log level of the package where the mapper interface is located to DEBUG, so that you can see more detailed SQL execution logs.
+  level:
+    "io.springcloud.mybatis.mapper": "DEBUG"
+
+LOG_PATH: /Users/micro/jihai/logs
+
+datasource:
+  config-path: /Users/micro/jihai
+
+
+spring:
+  profiles:
+    active: local
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+      enabled: true
+mybatis:
+  # Set the xml configuration file address for mybatis.
+  # config-location: "classpath:mybatis/mybatis-config.xml"
+
+  # Loads all files in the 'mapper' directory (regardless of directory hierarchy) with names ending in '-mapper.xml'.
+  mapper-locations:
+    - "classpath:mapper/**/*Mapper.xml"
+  configuration:
+    mapUnderscoreToCamelCase: true

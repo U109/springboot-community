@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jihai.bitfree.dao.ReplyDAO">
+    <resultMap id="replyResultMap" type="com.jihai.bitfree.entity.ReplyDO">
+        <result column="id" property="id" />
+        <result column="send_user_id" property="sendUserId" />
+        <result column="receiver_id" property="receiverId" />
+        <result column="post_id" property="postId" />
+        <result column="target_reply_id" property="targetReplyId" />
+        <result column="reply_content" property="replyContent" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="deleted" property="deleted" />
+    </resultMap>
+
+    <sql id="BASE_COLUMN">id, send_user_id, receiver_id, post_id, target_reply_id, reply_content, create_time, update_time, deleted</sql>
+    <insert id="insert" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+        INSERT INTO reply(`send_user_id`,`receiver_id`,`post_id`,`target_reply_id`, `reply_content`)
+        VALUE(#{sendUserId}, #{receiverId}, #{postId}, #{targetReplyId}, #{replyContent})
+    </insert>
+    <update id="deleted">
+        UPDATE reply
+        SET deleted = 1
+        WHERE post_id = #{postId}
+    </update>
+    <update id="deletedById">
+        UPDATE reply
+        SET deleted = 1
+        WHERE id = #{id}
+    </update>
+    <update id="deletedByTargetId">
+        UPDATE reply
+        SET deleted = 1
+        WHERE target_reply_id = #{targetReplyId}
+    </update>
+    <select id="queryByPostIdList" resultMap="replyResultMap">
+        SELECT <include refid="BASE_COLUMN"/> FROM reply WHERE deleted = 0 AND
+        post_id IN
+        <foreach collection="postIdList" item="postId" open="(" close=")" separator=",">
+            #{postId}
+        </foreach>
+    </select>
+
+
+    <select id="getByPostId" resultMap="replyResultMap">
+        SELECT <include refid="BASE_COLUMN"/>
+        FROM reply
+        WHERE post_id = #{postId} AND deleted = 0
+    </select>
+    <select id="pageQueryBySendUserId" resultMap="replyResultMap">
+        SELECT <include refid="BASE_COLUMN"/>
+        FROM reply
+        WHERE send_user_id = #{userId}
+        AND deleted = 0
+        ORDER BY create_time DESC LIMIT #{start}, #{size}
+    </select>
+    <select id="countBySendUserId" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM reply
+        WHERE send_user_id = #{userId}
+        AND deleted = 0
+    </select>
+    <select id="queryByIdList" resultMap="replyResultMap">
+        SELECT <include refid="BASE_COLUMN"/>
+        FROM reply
+        WHERE deleted = 0 AND id IN
+        <foreach collection="replyIdList" item="replyId" open="(" separator="," close=")">
+            #{replyId}
+        </foreach>
+    </select>
+    <select id="getById" resultMap="replyResultMap">
+        SELECT <include refid="BASE_COLUMN"/>
+        FROM reply
+        WHERE id = #{id}
+        AND deleted = 0 FOR UPDATE
+    </select>
+    <select id="pageQueryByReceiverId" resultMap="replyResultMap">
+        SELECT <include refid="BASE_COLUMN"/>
+        FROM reply
+        WHERE receiver_id = #{userId}
+        AND deleted = 0
+        ORDER BY create_time DESC LIMIT #{start}, #{size}
+    </select>
+    <select id="countByReceiverId" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM reply
+        WHERE  receiver_id = #{userId}
+        AND deleted = 0
+    </select>
+</mapper>
